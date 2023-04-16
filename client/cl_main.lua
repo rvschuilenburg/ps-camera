@@ -112,10 +112,8 @@ local function LoadPropDict(model)
     end
 end
 
-local function GetStreetNames()
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    local streetName, crossingRoad = GetStreetNameAtCoord(playerCoords.x, playerCoords.y, playerCoords.z)
+local function GetStreetNames(coords)
+    local streetName, crossingRoad = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
     local streetNameText = GetStreetNameFromHashKey(streetName)
     local crossingRoadText = ""
 
@@ -126,8 +124,8 @@ local function GetStreetNames()
     return streetNameText, crossingRoadText
 end
 
-function SetLocation()
-    local streetName, crossingRoad = GetStreetNames()
+function SetLocation(coords)
+    local streetName, crossingRoad = GetStreetNames(coords)
 
     if crossingRoad ~= "" then
         SendNUIMessage({action = "SetLocation", location = streetName .. " & " .. crossingRoad})
@@ -182,7 +180,7 @@ function CameraLoop()
                     camera = false
                     if cameraprop then DeleteEntity(cameraprop) end
                     ClearPedTasks(lPed)
-                    TriggerServerEvent("ps-camera:CreatePhoto", json.encode(image.attachments[1].proxy_url))
+                    TriggerServerEvent("ps-camera:CreatePhoto", json.encode(image.attachments[1].proxy_url), GetEntityCoords(lPed))
                     SendNUIMessage({action = "hideOverlay"})
                 end)
             end
@@ -206,7 +204,7 @@ function CameraLoop()
 end
 
 
-RegisterNetEvent("ps-camera:usePhoto", function(url)
+RegisterNetEvent("ps-camera:usePhoto", function(url, location)
     photo = not photo
 
     if photo then
@@ -219,8 +217,8 @@ RegisterNetEvent("ps-camera:usePhoto", function(url)
         end)
 
         local coords = GetEntityCoords(ped)
-        SetLocation(coords)
-        
+        SetLocation(location)
+
         if not HasModelLoaded("prop_cs_planning_photo") then
             LoadPropDict("prop_cs_planning_photo")
         end
